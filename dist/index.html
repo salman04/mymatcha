@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e7e4dc">
+  <meta name="description" content="Ambil waktu sejenak. Eksperimen meracik matcha di meja 3D yang tenang, dengan racikan bebas dan tantangan pesanan pelanggan.">
+  <title>Sejenak — Matcha Studio</title>
+  <link rel="stylesheet" href="style.css?v=ambience-1">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+  <main class="menu-active" id="studio" aria-label="Meja matcha interaktif tiga dimensi">
+    <canvas id="scene" aria-label="Toko matcha dengan jendela kayu menghadap taman dan pagar. Baki alat di kiri, chawan di tengah, teko dan gelas di kanan. Klik peralatan untuk meracik. Tahan teko, kotak susu, atau chasen untuk mengatur takaran. Tab menjelajahi objek, Enter menggunakannya." tabindex="0"></canvas>
+    <div id="loading"><span class="loading-leaf">葉</span><p>Menyiapkan meja…</p></div>
+    <header class="header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 25C5 9 14 5 26 5c0 13-6 23-19 20Z"/><path d="m7 25 13-13"/></svg></span><div><h1>sejenak<span>.</span></h1><p>MATCHA STUDIO</p></div></div>
+      <div class="header-actions">
+        <div id="order-chip" hidden><button id="order-open" class="round" hidden aria-label="Lihat pesanan pelanggan" aria-expanded="false" aria-controls="order-card" title="Lihat pesanan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6m-6 4h3"/></svg></button><span id="compact-time" role="timer" aria-label="Sisa waktu" aria-live="off">03:00</span></div>
+        <button id="atmosphere-open" class="round" aria-label="Pilih suasana kedai" aria-expanded="false" aria-controls="atmosphere-panel" title="Suasana kedai"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+        <button id="sound" class="round" aria-label="Pengaturan audio" aria-expanded="false" aria-controls="audio-panel" title="Pengaturan audio"><svg viewBox="0 0 24 24"><path d="m11 5-6 4H2v6h3l6 4V5ZM16 9l5 6m0-6-5 6"/></svg></button>
+        <button id="help" class="round" aria-label="Cara bermain" title="Cara bermain"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5m0 3h.01"/></svg></button>
+        <button id="reset" class="round" hidden aria-label="Mulai racikan baru" title="Racikan baru"><svg viewBox="0 0 24 24"><path d="M3 10a9 9 0 1 1 1 8M3 4v6h6"/></svg></button>
+      </div>
+    </header>
+    <section id="atmosphere-panel" class="atmosphere-panel" aria-labelledby="atmosphere-title" hidden>
+      <div class="audio-heading"><h2 id="atmosphere-title">Suasana kedai</h2><button id="atmosphere-close" aria-label="Tutup pilihan suasana">×</button></div>
+      <p class="atmosphere-intro">Pilih jeda yang kamu suka.</p>
+      <div class="atmosphere-choices" role="group" aria-label="Pilihan suasana">
+        <button data-atmosphere="morning" aria-pressed="true"><span class="mood-swatch morning" aria-hidden="true">☀</span><span><strong>Pagi cerah</strong><small>Cahaya pagi & kelopak sakura</small></span><span class="mood-check" aria-hidden="true">✓</span></button>
+        <button data-atmosphere="sunset" aria-pressed="false"><span class="mood-swatch sunset" aria-hidden="true">◒</span><span><strong>Sore hangat</strong><small>Sinar keemasan menjelang senja</small></span><span class="mood-check" aria-hidden="true">✓</span></button>
+        <button data-atmosphere="night" aria-pressed="false"><span class="mood-swatch night" aria-hidden="true">☾</span><span><strong>Malam tenang</strong><small>Taman biru & lentera hangat</small></span><span class="mood-check" aria-hidden="true">✓</span></button>
+        <button data-atmosphere="rain" aria-pressed="false"><span class="mood-swatch rain" aria-hidden="true">☂</span><span><strong>Hujan malam</strong><small>Rintik di taman, hangat di kedai</small></span><span class="mood-check" aria-hidden="true">✓</span></button>
+      </div>
+    </section>
+    <section id="audio-panel" class="audio-panel" aria-labelledby="audio-title" hidden>
+      <div class="audio-heading"><h2 id="audio-title">Suasana suara</h2><button id="audio-close" aria-label="Tutup pengaturan audio">×</button></div>
+      <div class="audio-channel">
+        <div class="audio-label"><label for="music-volume">Musik latar</label><output id="music-volume-value" for="music-volume">30%</output></div>
+        <div class="audio-level"><button id="music-toggle" class="audio-toggle" aria-label="Matikan musik" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m11 5-6 4H2v6h3l6 4V5Z"/><path class="audio-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="audio-slash" d="m16 9 5 6m0-6-5 6"/></svg></button><input id="music-volume" type="range" min="0" max="100" step="1" value="30" aria-describedby="music-volume-value"></div>
+      </div>
+      <div class="audio-channel">
+        <div class="audio-label"><label for="ambience-volume">Ambience kedai</label><output id="ambience-volume-value" for="ambience-volume">28%</output></div>
+        <div class="audio-level"><button id="ambience-toggle" class="audio-toggle" aria-label="Matikan ambience" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m11 5-6 4H2v6h3l6 4V5Z"/><path class="audio-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="audio-slash" d="m16 9 5 6m0-6-5 6"/></svg></button><input id="ambience-volume" type="range" min="0" max="100" step="1" value="28" aria-describedby="ambience-volume-value ambience-description"></div>
+        <p id="ambience-description" class="ambience-description">Burung pagi &amp; angin lembut</p>
+      </div>
+      <div class="audio-channel">
+        <div class="audio-label"><label for="effects-volume">Efek suara</label><output id="effects-volume-value" for="effects-volume">70%</output></div>
+        <div class="audio-level"><button id="effects-toggle" class="audio-toggle" aria-label="Matikan efek suara" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m11 5-6 4H2v6h3l6 4V5Z"/><path class="audio-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="audio-slash" d="m16 9 5 6m0-6-5 6"/></svg></button><input id="effects-volume" type="range" min="0" max="100" step="1" value="70" aria-describedby="effects-volume-value"></div>
+      </div>
+      <p class="audio-hint">Tiga suara, atur sesuai nyamannya.</p>
+      <button id="audio-mute-all" class="audio-mute-all">Senyapkan semua</button>
+    </section>
+    <div class="scene-caption"><span class="live-dot"></span><span>Waktu untuk dirimu</span></div>
+    <nav id="mode-switch" class="mode-switch" hidden aria-label="Mode bermain"><span id="current-mode">Cozy · bebas waktu</span><button data-main-menu>← Menu utama</button></nav>
+    <aside id="order-card" class="order-card" data-expanded="false" hidden aria-label="Pesanan pelanggan">
+      <button id="order-toggle" aria-label="Tutup pesanan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      <div class="order-visitor"><span id="order-avatar" class="portrait-slot"></span><div><p id="customer"></p><span id="customer-tagline"></span></div></div><h2 id="order-title"></h2><p id="order-milk" class="order-milk"></p><p id="order-note"></p>
+      <div id="challenge-timer" class="challenge-timer"><div><span>Sisa waktu</span><strong id="time-left" role="timer" aria-live="off">03:00</strong></div><div class="timer-track"><span id="timer-track-fill"></span></div></div>
+      <details open><summary>Kenali pelanggan &amp; resep</summary><p id="customer-greeting"></p><ul id="order-checks"></ul><p class="order-tip">Urutan susu &amp; matcha bebas. Tanpa es menjadi Hot; tambahkan es untuk Ice.</p></details><p class="order-reopen-hint">Buka lagi lewat ikon pesanan di kanan atas.</p>
+    </aside>
+    <aside id="delivery-note" hidden role="status" aria-live="polite"><span id="delivery-avatar" class="portrait-slot"></span><div><p id="delivery-eyebrow" class="eyebrow">DARI MEJA KECILMU</p><strong id="delivery-title"></strong><p id="delivery-description"></p><span id="delivery-stars" hidden></span></div></aside>
+    <aside id="served-note" hidden aria-label="Pesanan disajikan"><span id="served-caption"></span><div><button id="served-detail">Detail racikan</button><button id="served-next">Pelanggan berikutnya ↗</button></div></aside>
+    <span class="sr-only" id="timer-announcement" role="status" aria-live="polite"></span>
+    <div class="camera-controls" aria-label="Jarak pandang">
+      <button id="zoom-out" aria-label="Jauhkan pandangan">−</button><span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 5 5"/></svg></span><button id="zoom-in" aria-label="Dekatkan pandangan">+</button>
+    </div>
+    <nav id="mobile-view" aria-label="Geser pandangan meja" hidden>
+      <button id="pan-left" aria-label="Lihat peralatan di kiri">‹</button>
+      <button id="pan-home" aria-label="Pusatkan chawan dan gelas">Meja</button>
+      <button id="pan-right" aria-label="Lihat teko dan es di kanan">›</button>
+    </nav>
+    <div id="object-label" role="tooltip" hidden></div>
+    <section id="welcome" class="welcome" aria-labelledby="welcome-title">
+      <div class="menu-panel">
+        <p class="eyebrow">SELAMAT DATANG DI KEDAI KECILMU</p>
+        <h2 id="welcome-title">Secangkir matcha,<br>sesuai suasana hatimu.</h2>
+        <p class="menu-intro">Pilih caramu menikmati waktu di sini.</p>
+        <div class="mode-choices">
+          <button id="begin" class="mode-choice cozy-choice"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M10 31C7 13 18 7 31 8c0 16-8 26-21 23Zm0 0L26 14"/></svg><strong>Cozy</strong><span>Tuang, kocok, bereksperimen.<br> Racik sesuka hati tanpa batas waktu.</span><span class="mode-tag">Bebas waktu</span><span class="mode-enter">Masuk ke meja <b aria-hidden="true">↗</b></span></button>
+          <button id="begin-challenge" class="mode-choice challenge-choice"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M10 12h20l-2 20H12l-2-20Zm4-5h12M15 19h10m-5-3v6M30 15c9-2 9 11-1 10"/></svg><strong>Challenge</strong><span>Sepuluh pelanggan, sepuluh racikan.<br> Sajikan pesanan sesuai selera mereka.</span><span class="mode-tag">10 pesanan · 3 menit / pesanan</span><span class="mode-enter">Buka kedai <b aria-hidden="true">↗</b></span></button>
+        </div>
+        <button id="menu-atmosphere" class="menu-atmosphere">☀ Pagi cerah · ganti suasana</button><p class="menu-footnote">Satu sendok, satu tuangan, satu jeda kecil.</p>
+      </div>
+    </section>
+    <div id="workbench" class="glass-action" hidden><button id="submit-drink" class="serve-button">Sajikan ↗</button></div>
+    <div id="object-controls" hidden role="group" aria-label="Peralatan di meja"></div>
+    <output id="active-measure" hidden aria-live="off"></output>
+    <span id="measure-announcement" class="sr-only" role="status" aria-live="polite"></span>
+    <aside id="toast" role="status" aria-live="polite"></aside>
+    <dialog id="help-dialog"><button class="dialog-close" aria-label="Tutup">×</button><p class="eyebrow">BUAT SESUKAMU</p><h2>Ritual yang sederhana.</h2><ol><li><strong>Racik di chawan.</strong> Klik kaleng, sendok, atau ayakan untuk mengambil dan mengayak 1 sendok matcha sekaligus. Tambahkan sekitar 60 ml air, lalu kocok.</li><li><strong>Siapkan gelas.</strong> Tanpa es, racikan menjadi Hot. Tambahkan es untuk Ice: sekali tambah memasukkan 3 es batu, maksimal 12 buah.</li><li><strong>Buat lapisan latte.</strong> Pilih Fresh Milk, Almond Milk, atau Oat Milk, lalu tuang sekitar 120 ml langsung dari kotaknya ke gelas, lalu matcha dari chawan. Urutannya boleh dibalik!</li><li><strong>Cloud & penyajian.</strong> Tambahkan krim cloud jika diinginkan, lalu tekan Sajikan di samping gelas. Tombol muncul setelah matcha dituangkan ke gelas.</li></ol><p class="help-extra">Arahkan kursor ke peralatan untuk melihat sorotan lembut dan aksi di sampingnya. Sorot chawan atau gelas untuk mengecek takaran isi; Tab juga dapat menampilkan informasi ini. Sendok dan ayakan bekerja bersama: setiap sendok matcha selalu diayak. Klik es atau krim untuk menambah bahan. Klik chawan untuk menuang matcha ke gelas, lalu klik gelas atau tombol di sampingnya untuk menyajikan. Pesanan tampil sebentar di awal dan bisa dibuka kembali lewat ikon pesanan di kanan atas. Klik teko menuang 30 ml air; klik kotak susu menuang 40 ml; klik chasen mengocok sebentar. Tekan dan tahan untuk mengatur takaran sendiri, lepas untuk berhenti. Klik baki untuk kembali ke pandangan meja. Tab memilih objek dan Enter menjalankan satu aksi. Spasi ditahan untuk menuang atau mengocok; Esc menghentikan aksi. Cozy bebas waktu. Dalam Challenge, selesaikan 10 pesanan, masing-masing dalam 3 menit. Waktu tetap berjalan saat membuka panduan atau melihat racikan yang belum sesuai. Saat gelas sedang disajikan, waktu berhenti sejenak. Geser meja di mobile untuk menjangkau peralatan lain. Pesanan yang waktunya habis bisa diulang; pesanan sebelumnya tetap selesai. Takaran resep ini adalah aturan permainan.</p><button class="primary dialog-done">Kembali ke meja</button></dialog>
+    <dialog id="finish-dialog" aria-labelledby="finish-title" aria-describedby="finish-description">
+      <button class="dialog-close finish-close" aria-label="Kembali ke meja">×</button>
+      <div class="finish-layout">
+        <div class="finish-visual" role="img" aria-label="Tampilan dekat gelas berisi racikan matcha yang baru kamu buat"><span>Racikan buatanmu</span></div>
+        <section class="finish-card">
+          <p class="eyebrow">SATU JEDA, SATU RACIKAN</p>
+          <h2 id="finish-title">Selamat, Matcha-mu telah jadi!</h2>
+          <p id="finish-description"></p>
+          <p id="finish-time" class="finish-time" hidden></p>
+          <section id="customer-reaction" class="customer-reaction" aria-label="Rating dan reaksi pelanggan" hidden>
+            <div class="customer-reaction-head">
+              <span id="reaction-avatar" class="portrait-slot customer-avatar"></span>
+              <div><p id="reaction-customer" class="reaction-customer"></p><p id="reaction-tagline"></p><strong id="reaction-label"></strong><div class="rating-line"><span id="rating-stars" class="rating-stars" role="img"></span><span id="rating-score" class="rating-score"></span></div></div>
+            </div>
+            <blockquote id="customer-quote"></blockquote>
+            <p id="customer-tip" class="customer-tip"></p>
+            <p class="rating-note">Rating mengikuti racikan. Waktu penyajian tidak mengurangi waktu meracik.</p>
+          </section>
+          <div class="finish-details" id="finish-details"></div>
+          <details id="recipe-summary" class="result-recipe" open><summary>Detail racikan & catatan</summary>
+            <dl class="recipe-details" id="recipe-details"></dl>
+            <ul id="challenge-feedback" class="challenge-feedback" hidden></ul>
+          </details>
+          <button id="next-order" class="primary" hidden>Customer berikutnya ↗</button>
+          <button id="another" class="primary">Buat Ulang <span aria-hidden="true">↗</span></button>
+          <button class="quiet dialog-done">Kembali ke meja</button>
+          <button class="quiet" data-main-menu>Menu utama · akhiri sesi</button>
+        </section>
+      </div>
+    </dialog>
+    <dialog id="recap-dialog" aria-labelledby="recap-title" aria-describedby="recap-description">
+      <header class="recap-heading"><p class="eyebrow">RANGKUMAN CHALLENGE</p><h2 id="recap-title" tabindex="-1">Sepuluh cangkir, banyak senyum.</h2><p id="recap-description">Terima kasih sudah meracik dengan sepenuh hati.</p><span id="recap-count"></span></header>
+      <dl class="recap-totals">
+        <div><dt>Total skor</dt><dd><strong id="recap-score">0</strong> <span id="recap-max-score">/ 1.000</span></dd></div>
+        <div><dt>Bintang terkumpul</dt><dd><strong id="recap-stars">0</strong> <span id="recap-max-stars">/ 50</span><span class="recap-star-mark" aria-hidden="true"> ★</span></dd></div>
+        <div><dt>Waktu meracik</dt><dd><strong id="recap-time">00:00</strong><span class="recap-time-unit"> menit:detik</span></dd></div>
+      </dl>
+      <div class="recap-scroll" tabindex="0" aria-label="Rincian sepuluh pelanggan, gulir untuk melihat semua">
+        <table class="recap-table"><caption class="sr-only">Skor, bintang, dan waktu penyelesaian setiap customer</caption><thead><tr><th scope="col">Customer &amp; pesanan</th><th scope="col">Bintang</th><th scope="col">Skor</th><th scope="col">Waktu</th></tr></thead><tbody id="recap-customers"></tbody></table>
+        <p class="recap-note">Skor dan bintang mengikuti racikan terakhir yang berhasil disajikan. Waktu termasuk percobaan ulang; jeda setelah pesanan berhasil atau waktu habis tidak dihitung.</p>
+      </div>
+      <footer class="recap-actions"><button id="recap-replay" class="primary">Main Lagi <span aria-hidden="true">↗</span></button><button class="secondary" data-main-menu>Menu Utama</button></footer>
+    </dialog>
+    <dialog id="timeout-dialog" aria-labelledby="timeout-title" aria-describedby="timeout-progress">
+      <p class="eyebrow">JEDA SEBENTAR</p><h2 id="timeout-title">Waktunya habis,<br>yuk coba lagi.</h2>
+      <p id="timeout-order"></p><p id="timeout-progress"></p>
+      <button id="retry-order" class="primary">Ulangi pesanan · 3 menit ↗</button><button class="quiet" data-main-menu>Menu utama · akhiri sesi</button>
+    </dialog>
+    <div id="fallback" hidden><h2>Meja 3D belum bisa dibuka.</h2><p>Aktifkan akselerasi grafis di browser, lalu muat ulang halaman.</p><button onclick="location.reload()">Coba lagi</button></div>
+  </main>
+  <script type="module" src="main.js?v=milk-side-1"></script>
+</body>
+</html>
